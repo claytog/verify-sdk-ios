@@ -208,17 +208,18 @@ public class WalletService: WalletServiceDescriptor {
             decoder.dateDecodingStrategy = .millisecondsSince1970
             
             /// Decode the invitation processor response.
-            guard let info = try? decoder.decode(InvitationPreviewInfo.self, from: data) else {
+            /// guard let info = try? decoder.decode(InvitationPreviewInfo.self, from: data) else {    /// original
+            guard let info = try? decoder.decode(RootInvitation.self, from: data) else {
                 throw WalletError.failedToParse
             }
-            
-            /// Determine what type of invitation to return.
-            switch info.type {
-            case .offerCredential:
-                return CredentialPreviewInfo(using: info)
-            case .requestPresentation:
-                return VerificationPreviewInfo(using: info)
-            }
+            print("LABEL: \(info.invitation.label)")
+//            /// Determine what type of invitation to return.
+//            switch info.type {
+//            case .offerCredential:
+//                return CredentialPreviewInfo(using: info)
+//            case .requestPresentation:
+//                return VerificationPreviewInfo(using: info)
+//            }
             
         }
         catch let error {

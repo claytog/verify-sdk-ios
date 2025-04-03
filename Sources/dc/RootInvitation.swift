@@ -4,7 +4,7 @@
 //
 //  Created by Clayton Gilbert on 3/4/2025.
 //
-
+import Foundation
 
 struct RootInvitation: Decodable {
     let invitation: Invitation
@@ -18,8 +18,8 @@ struct Invitation: Decodable {
     let serviceEndpoint: String
     let routingKeys: [String]
     let ext: Bool
-    let url: URL
-    let shortUrl: URL
+    let url: String
+    let shortUrl: String
 
     private enum CodingKeys: String, CodingKey {
         case type = "@type"

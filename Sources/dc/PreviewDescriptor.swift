@@ -137,53 +137,95 @@ extension InvitationPreviewInfo: Decodable {
         case requestsAttach = "requests~attach"
         case url = "short_url"
     }
-    
-    public init(from decoder: any Decoder) throws {
+    public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        let invitationContainer = try container.nestedContainer(keyedBy: InvitationCodingKeys.self, forKey: .invitation)
         
-        // invitation
-        let invitationContainer =  try container.nestedContainer(keyedBy: InvitationCodingKeys.self, forKey: .invitation)
         self.label = try invitationContainer.decodeIfPresent(String.self, forKey: .label)
         self.url = try invitationContainer.decode(URL.self, forKey: .url)
         
-        // requests-attach, get the first item.
-        guard let requestsAttach = try invitationContainer.decodeIfPresent([RequestAttach].self, forKey: .requestsAttach), let requestAttach = requestsAttach.first else {
-            throw WalletError.failedToParse
-        }
-        
-        self.id = requestAttach.id
-        
-        // json
-        self.comment = requestAttach.data.json.comment
-        self.type = requestAttach.data.json.type
-        self.formats = requestAttach.data.json.formats.compactMap { $0["format"] }
-        
-        // offers-attach or request_presentations~attach.
-        let attach = requestAttach.data.json.offersAttach ?? requestAttach.data.json.presentationAttach
-        
-        // Decode the Base64 string.
-        guard let attach = attach, let attachItem = attach.first, let data = Data(base64Encoded: attachItem.data.base64) else {
-            throw WalletError.failedToParse
-        }
-        
-        // Check if "credentail_preview" is present, typically for Indy credential offers but not Indy credential verifications.
-        if self.formats.allSatisfy(["hlindy-zkp-v1.0", ].contains), let credentialPreview = requestAttach.data.json.credentialPreview {
-            // Map credential_preview to a regular dictionary.
-            var dict = Dictionary.init(uniqueKeysWithValues: credentialPreview.map( {key, value in (key, value.value)} ))
-        
-            //  Create a dictionary from data and add "cred_def_id".
-            if let base64 = try JSONSerialization.jsonObject(with: data) as? [String: Any], let schemaId = base64["cred_def_id"] as? String {
-                dict.updateValue(schemaId, forKey: "cred_def_id")
+        // If requests~attach is not present, assume it's a connection invitation
+        if let requestsAttach = try invitationContainer.decodeIfPresent([RequestAttach].self, forKey: .requestsAttach),
+           let requestAttach = requestsAttach.first {
+            self.id = requestAttach.id
+            self.comment = requestAttach.data.json.comment
+            self.type = requestAttach.data.json.type
+            self.formats = requestAttach.data.json.formats.compactMap { $0["format"] }
+            
+            let attach = requestAttach.data.json.offersAttach ?? requestAttach.data.json.presentationAttach
+            guard let attach = attach, let attachItem = attach.first,
+                  let data = Data(base64Encoded: attachItem.data.base64) else {
+                throw WalletError.failedToParse
             }
 
-            // Serialize dictionary to JSON data and convert to String.
-            let value = try JSONSerialization.data(withJSONObject: dict, options: [.fragmentsAllowed])
-            self.jsonRepresentation = value
-            
+            if self.formats.allSatisfy(["hlindy-zkp-v1.0"].contains),
+               let credentialPreview = requestAttach.data.json.credentialPreview {
+                var dict = Dictionary(uniqueKeysWithValues: credentialPreview.map { ($0.key, $0.value.value) })
+                if let base64 = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                   let schemaId = base64["cred_def_id"] as? String {
+                    dict["cred_def_id"] = schemaId
+                }
+                self.jsonRepresentation = try JSONSerialization.data(withJSONObject: dict, options: [.fragmentsAllowed])
+            } else {
+                self.jsonRepresentation = data
+            }
             return
         }
-        
-        // Serialize JSON to string.
-        self.jsonRepresentation = data
+
+        // Fallback: connection-only invitation
+        self.id = try invitationContainer.decode(String.self, forKey: .label) // or generate UUID
+        self.comment = nil
+        self.type = .invitation
+        self.formats = []
+        self.jsonRepresentation = nil
     }
+    
+//    public init(from decoder: any Decoder) throws {
+//        let container = try decoder.container(keyedBy: CodingKeys.self)
+//        
+//        // invitation
+//        let invitationContainer =  try container.nestedContainer(keyedBy: InvitationCodingKeys.self, forKey: .invitation)
+//        self.label = try invitationContainer.decodeIfPresent(String.self, forKey: .label)
+//        self.url = try invitationContainer.decode(URL.self, forKey: .url)
+//        
+//        // requests-attach, get the first item.
+//        guard let requestsAttach = try invitationContainer.decodeIfPresent([RequestAttach].self, forKey: .requestsAttach), let requestAttach = requestsAttach.first else {
+//            throw WalletError.failedToParse
+//        }
+//        
+//        self.id = requestAttach.id
+//        
+//        // json
+//        self.comment = requestAttach.data.json.comment
+//        self.type = requestAttach.data.json.type
+//        self.formats = requestAttach.data.json.formats.compactMap { $0["format"] }
+//        
+//        // offers-attach or request_presentations~attach.
+//        let attach = requestAttach.data.json.offersAttach ?? requestAttach.data.json.presentationAttach
+//        
+//        // Decode the Base64 string.
+//        guard let attach = attach, let attachItem = attach.first, let data = Data(base64Encoded: attachItem.data.base64) else {
+//            throw WalletError.failedToParse
+//        }
+//        
+//        // Check if "credentail_preview" is present, typically for Indy credential offers but not Indy credential verifications.
+//        if self.formats.allSatisfy(["hlindy-zkp-v1.0", ].contains), let credentialPreview = requestAttach.data.json.credentialPreview {
+//            // Map credential_preview to a regular dictionary.
+//            var dict = Dictionary.init(uniqueKeysWithValues: credentialPreview.map( {key, value in (key, value.value)} ))
+//        
+//            //  Create a dictionary from data and add "cred_def_id".
+//            if let base64 = try JSONSerialization.jsonObject(with: data) as? [String: Any], let schemaId = base64["cred_def_id"] as? String {
+//                dict.updateValue(schemaId, forKey: "cred_def_id")
+//            }
+//
+//            // Serialize dictionary to JSON data and convert to String.
+//            let value = try JSONSerialization.data(withJSONObject: dict, options: [.fragmentsAllowed])
+//            self.jsonRepresentation = value
+//            
+//            return
+//        }
+//        
+//        // Serialize JSON to string.
+//        self.jsonRepresentation = data
+//    }
 }

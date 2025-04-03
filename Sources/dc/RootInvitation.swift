@@ -7,29 +7,29 @@
 import Foundation
 
 struct RootInvitation: Decodable {
-    let invitation: Invitation
+    let invitation: InvitationPreviewInfo
 }
-
-struct Invitation: Decodable {
-    let type: String
-    let id: String
-    let label: String
-    let recipientKeys: [String]
-    let serviceEndpoint: String
-    let routingKeys: [String]
-    let ext: Bool
-    let url: String
-    let shortUrl: String
-
-    private enum CodingKeys: String, CodingKey {
-        case type = "@type"
-        case id = "@id"
-        case label
-        case recipientKeys
-        case serviceEndpoint
-        case routingKeys
-        case ext
-        case url
-        case shortUrl = "short_url"
-    }
-}
+//
+//struct Invitation: Decodable {
+//    let type: String
+//    let id: String
+//    let label: String
+//    let recipientKeys: [String]
+//    let serviceEndpoint: String
+//    let routingKeys: [String]
+//    let ext: Bool
+//    let url: String
+//    let shortUrl: String
+//
+//    private enum CodingKeys: String, CodingKey {
+//        case type = "@type"
+//        case id = "@id"
+//        case label
+//        case recipientKeys
+//        case serviceEndpoint
+//        case routingKeys
+//        case ext
+//        case url
+//        case shortUrl = "short_url"
+//    }
+//}

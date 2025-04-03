@@ -220,7 +220,7 @@ public class WalletService: WalletServiceDescriptor {
 //            case .requestPresentation:
 //                return VerificationPreviewInfo(using: info)
 //            }
-            return CredentialPreviewInfo(id: info.invitation.id, url: URL(string: info.invitation.url!), label: info.invitation.label, comment: info.invitation.label, jsonRepresentation: nil, documentTypes: [""])
+            return CredentialPreviewInfo(id: info.invitation.id, url: URL(string: info.invitation.url)!, label: info.invitation.label, comment: info.invitation.label, jsonRepresentation: nil, documentTypes: [""])
             
         }
         catch let error {

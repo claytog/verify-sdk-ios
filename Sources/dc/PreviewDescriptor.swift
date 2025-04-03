@@ -51,7 +51,8 @@ extension InvitationPreviewInfo {
     enum InvitationType: String, Decodable {
         /// Offer a credential.
         case offerCredential = "https://didcomm.org/issue-credential/2.0/offer-credential"
-        
+        /// Receive an invitation.
+        case invitation = "https://didcomm.org/didexchange/1.0/invitation"
         /// Request proof presentation.
         case requestPresentation = "https://didcomm.org/present-proof/2.0/request-presentation"
     }

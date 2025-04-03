@@ -208,11 +208,11 @@ public class WalletService: WalletServiceDescriptor {
             decoder.dateDecodingStrategy = .millisecondsSince1970
             
             /// Decode the invitation processor response.
-            /// guard let info = try? decoder.decode(InvitationPreviewInfo.self, from: data) else {    /// original
-            guard let info = try? decoder.decode(RootInvitation.self, from: data) else {
+            guard let info = try? decoder.decode(InvitationPreviewInfo.self, from: data) else {
+         //   guard let info = try? decoder.decode(RootInvitation.self, from: data) else {
                 throw WalletError.failedToParse
             }
-            print("✅ SUCCESS INVITATION LABEL: \(info.invitation.label)")
+            print("✅ SUCCESS INVITATION: \(info.invitation)")
             print()
             print()
             print()

@@ -14,7 +14,7 @@ public struct CredentialPreviewInfo: PreviewDescriptor {
     public let jsonRepresentation: Data?
     public let documentTypes: [String]
 }
-
+/*
 extension CredentialPreviewInfo {
     internal init(using info: Invitation) {
         self.id = info.id
@@ -55,3 +55,4 @@ extension CredentialPreviewInfo {
         self.jsonRepresentation = info.jsonRepresentation
     }
 }
+*/

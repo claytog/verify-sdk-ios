@@ -61,7 +61,7 @@ extension InvitationPreviewInfo {
     internal struct RequestAttach: Decodable {
         /// The credential identifier.
         let id: String
-        
+        let type: String
         /// Credential data offered by issuer.
         let data: Data
         

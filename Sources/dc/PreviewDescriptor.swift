@@ -67,6 +67,7 @@ extension InvitationPreviewInfo {
         
         private enum CodingKeys: String, CodingKey {
             case id = "@id"
+            case type = "@type"
             case data
         }
     }

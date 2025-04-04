@@ -207,20 +207,25 @@ public class WalletService: WalletServiceDescriptor {
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .millisecondsSince1970
             
+            let stubInvitation = InvitationPreviewInfo(
+                id: "604fc1b5-f0e6-4d0e-9fab-a42ad8136560",
+                url: URL(string: "https://example.com/invitation?id=604fc1b5-f0e6-4d0e-9fab-a42ad8136560")!,
+                label: "issuer_1",
+                comment: "This is a test invitation",
+                type: .invitation,
+                formats: ["didcomm/aip2;env=rfc19"],
+                jsonRepresentation: nil // or Data("{}".utf8) if needed
+            )
+            
+            
+            
             /// Decode the invitation processor response.
-            guard let info = try? decoder.decode(RootInvitation.self, from: data) else {
-         //   guard let info = try? decoder.decode(RootInvitation.self, from: data) else {
-                throw WalletError.failedToParse
-            }
+//            guard let info = try? decoder.decode(RootInvitation.self, from: data) else {
+//         //   guard let info = try? decoder.decode(RootInvitation.self, from: data) else {
+//                throw WalletError.failedToParse
+//            }
             print("✅ SUCCESS INVITATION: \(info.invitation)")
-            print()
-            print()
-            print()
-            print()
-            print()
-            print()
-            print()
-            print()
+
             
 //            /// Determine what type of invitation to return.
 //            switch info.type {
@@ -229,7 +234,9 @@ public class WalletService: WalletServiceDescriptor {
 //            case .requestPresentation:
 //                return VerificationPreviewInfo(using: info)
 //            }
-            return CredentialPreviewInfo(id: info.invitation.id, url: info.invitation.url, label: info.invitation.label, comment: info.invitation.label, jsonRepresentation: nil, documentTypes: [""])
+            return CredentialPreviewInfo(id: stubInvitation.id, url: stubInvitation.url, label: stubInvitation.label, comment: stubInvitation.label, jsonRepresentation: nil, documentTypes: [""])
+            
+        //    return CredentialPreviewInfo(id: info.invitation.id, url: info.invitation.url, label: info.invitation.label, comment: info.invitation.label, jsonRepresentation: nil, documentTypes: [""])
         }
         catch let error {
             throw error

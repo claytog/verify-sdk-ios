@@ -137,10 +137,10 @@ extension InvitationPreviewInfo.RequestAttach.Data.JSON {
 extension InvitationPreviewInfo: Decodable {
     // MARK: Enums
 
-    /// The root level JSON structure for decoding.
-    private enum CodingKeys: String, CodingKey {
-        case invitation
-    }
+//    /// The root level JSON structure for decoding.
+//    private enum CodingKeys: String, CodingKey {
+//        case invitation
+//    }
     
     private enum InvitationCodingKeys: String, CodingKey {
         case label

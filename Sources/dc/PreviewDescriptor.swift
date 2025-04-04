@@ -39,7 +39,7 @@ internal struct InvitationPreviewInfo: PreviewDescriptor {
     /// An array of verifiable credential formats.
     let formats: [String]?
     
-    let jsonRepresentation: Data? = nil // No JSON content in the sample
+    let jsonRepresentation: Data?
     
     internal let documentTypes: [String] = []
     

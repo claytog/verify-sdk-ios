@@ -16,7 +16,7 @@ public struct CredentialPreviewInfo: PreviewDescriptor {
 }
 
 extension CredentialPreviewInfo {
-    internal init(using info: Invitation) {
+    internal init(using info: InvitationPreviewInfo) {
         self.id = info.id
         self.url = info.url
         self.label = info.label

@@ -35,9 +35,9 @@ extension VerificationPreviewInfo {
         var purpose = ""
         
         // Create a dictionary from the JSON to check for document types.
-        if let jsonRepresentation = info.jsonRepresentation, let data = try? JSONDecoder().decode([String: AnyCodable].self, from: jsonRepresentation) {
+        if let jsonRepresentation = info.jsonRepresentation, let data = try? JSONDecoder().decode([String: AnyCodable].self, from: jsonRepresentation), let formats = info.formats {
             // Use the formats to determine how to generate the documentTypes.
-            if info.formats.allSatisfy(["dif/presentation-exchange/definition@v1.0"].contains) {
+            if formats.allSatisfy(["dif/presentation-exchange/definition@v1.0"].contains) {
                 // For mdoc, get the id in the "input_descriptors" level as the documentType.
                 if let item = data["presentation_definition"], let presentationDefinition = item.value as? [String: Any], let inputDescriptors = presentationDefinition["input_descriptors"] as? [[String: Any]], let inputDescriptor = inputDescriptors.first, let id = inputDescriptor["id"] as? String, let nameValue = inputDescriptor["name"] as? String, let purposeValue = inputDescriptor["purpose"] as? String {
                     documentTypes = [id]
@@ -45,7 +45,7 @@ extension VerificationPreviewInfo {
                     purpose = purposeValue
                 }
             }
-            else if info.formats.allSatisfy(["hlindy/proof-req@v2.0"].contains) {
+            else if formats.allSatisfy(["hlindy/proof-req@v2.0"].contains) {
                // Obtain the name from the root structure.
                 if let item = data["name"], let nameValue = item.value as? String {
                     name = nameValue

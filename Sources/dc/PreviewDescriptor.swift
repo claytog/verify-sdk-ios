@@ -43,15 +43,6 @@ internal struct InvitationPreviewInfo: PreviewDescriptor {
     
     internal let documentTypes: [String] = []
     
-    // Coding keys to map from JSON keys
-        enum CodingKeys: String, CodingKey {
-            case id = "@id"
-            case url
-            case label
-            case comment
-            case type = "@type"
-            case formats
-        }
 }
 
 // MARK: Internal Structures
@@ -137,10 +128,16 @@ extension InvitationPreviewInfo.RequestAttach.Data.JSON {
 extension InvitationPreviewInfo: Decodable {
     // MARK: Enums
 
-//    /// The root level JSON structure for decoding.
-//    private enum CodingKeys: String, CodingKey {
-//        case invitation
-//    }
+    /// The root level JSON structure for decoding.
+    private enum CodingKeys: String, CodingKey {
+        case invitation
+        case id = "@id"
+        case url
+        case label
+        case comment
+        case type = "@type"
+        case formats
+    }
     
     private enum InvitationCodingKeys: String, CodingKey {
         case label

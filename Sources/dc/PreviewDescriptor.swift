@@ -37,7 +37,7 @@ internal struct InvitationPreviewInfo: PreviewDescriptor {
     let type: InvitationType
     
     /// An array of verifiable credential formats.
-    let formats: [String]
+    let formats: [String]?
     
     let jsonRepresentation: Data?
     
@@ -90,7 +90,7 @@ extension InvitationPreviewInfo.RequestAttach.Data {
         let comment: String?
         
         /// An array of verifiable credential formats.
-        let formats: [[String: String]]
+        let formats: [[String: String]]?
         
         /// The credential preview
         let credentialPreview: [String: AnyCodable]?

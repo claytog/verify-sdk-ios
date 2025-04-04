@@ -37,7 +37,7 @@ internal struct InvitationPreviewInfo: PreviewDescriptor {
     let type: InvitationType
     
     /// An array of verifiable credential formats.
-    let formats: [String] = []
+    let formats: [String]?
     
     let jsonRepresentation: Data?
     
@@ -156,7 +156,7 @@ extension InvitationPreviewInfo: Decodable {
         // json
         self.comment = requestAttach.data.json.comment
         self.type = requestAttach.data.json.type
-        self.formats = requestAttach.data.json.formats.compactMap { $0["format"] }
+        self.formats = requestAttach.data.json.formats?.compactMap { $0["format"] }
         
         // offers-attach or request_presentations~attach.
         let attach = requestAttach.data.json.offersAttach ?? requestAttach.data.json.presentationAttach
@@ -167,7 +167,7 @@ extension InvitationPreviewInfo: Decodable {
         }
         
         // Check if "credentail_preview" is present, typically for Indy credential offers but not Indy credential verifications.
-        if self.formats.allSatisfy(["hlindy-zkp-v1.0", ].contains), let credentialPreview = requestAttach.data.json.credentialPreview {
+        if self.formats?.allSatisfy(["hlindy-zkp-v1.0", ].contains), let credentialPreview = requestAttach.data.json.credentialPreview {
             // Map credential_preview to a regular dictionary.
             var dict = Dictionary.init(uniqueKeysWithValues: credentialPreview.map( {key, value in (key, value.value)} ))
         

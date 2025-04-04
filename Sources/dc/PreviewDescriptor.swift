@@ -39,9 +39,19 @@ internal struct InvitationPreviewInfo: PreviewDescriptor {
     /// An array of verifiable credential formats.
     let formats: [String]?
     
-    let jsonRepresentation: Data?
+    let jsonRepresentation: Data? = nil // No JSON content in the sample
     
     internal let documentTypes: [String] = []
+    
+    // Coding keys to map from JSON keys
+        enum CodingKeys: String, CodingKey {
+            case id = "@id"
+            case url
+            case label
+            case comment
+            case type = "@type"
+            case formats
+        }
 }
 
 // MARK: Internal Structures
@@ -61,13 +71,12 @@ extension InvitationPreviewInfo {
     internal struct RequestAttach: Decodable {
         /// The credential identifier.
         let id: String
-        let type: String
+        
         /// Credential data offered by issuer.
         let data: Data
         
         private enum CodingKeys: String, CodingKey {
             case id = "@id"
-            case type = "@type"
             case data
         }
     }

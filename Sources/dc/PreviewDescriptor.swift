@@ -167,20 +167,22 @@ extension InvitationPreviewInfo: Decodable {
         }
         
         // Check if "credentail_preview" is present, typically for Indy credential offers but not Indy credential verifications.
-        if self.formats?.allSatisfy(["hlindy-zkp-v1.0", ].contains), let credentialPreview = requestAttach.data.json.credentialPreview {
-            // Map credential_preview to a regular dictionary.
-            var dict = Dictionary.init(uniqueKeysWithValues: credentialPreview.map( {key, value in (key, value.value)} ))
-        
-            //  Create a dictionary from data and add "cred_def_id".
-            if let base64 = try JSONSerialization.jsonObject(with: data) as? [String: Any], let schemaId = base64["cred_def_id"] as? String {
-                dict.updateValue(schemaId, forKey: "cred_def_id")
+        if let formats = self.formats {
+            if formats.allSatisfy(["hlindy-zkp-v1.0", ].contains), let credentialPreview = requestAttach.data.json.credentialPreview {
+                // Map credential_preview to a regular dictionary.
+                var dict = Dictionary.init(uniqueKeysWithValues: credentialPreview.map( {key, value in (key, value.value)} ))
+                
+                //  Create a dictionary from data and add "cred_def_id".
+                if let base64 = try JSONSerialization.jsonObject(with: data) as? [String: Any], let schemaId = base64["cred_def_id"] as? String {
+                    dict.updateValue(schemaId, forKey: "cred_def_id")
+                }
+                
+                // Serialize dictionary to JSON data and convert to String.
+                let value = try JSONSerialization.data(withJSONObject: dict, options: [.fragmentsAllowed])
+                self.jsonRepresentation = value
+                
+                return
             }
-
-            // Serialize dictionary to JSON data and convert to String.
-            let value = try JSONSerialization.data(withJSONObject: dict, options: [.fragmentsAllowed])
-            self.jsonRepresentation = value
-            
-            return
         }
         
         // Serialize JSON to string.

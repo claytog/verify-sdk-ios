@@ -224,7 +224,7 @@ public class WalletService: WalletServiceDescriptor {
 //         //   guard let info = try? decoder.decode(RootInvitation.self, from: data) else {
 //                throw WalletError.failedToParse
 //            }
-            print("✅ SUCCESS INVITATION: \(stubInvitation.invitation)")
+            print("✅ SUCCESS INVITATION: \(stubInvitation.label)")
 
             
 //            /// Determine what type of invitation to return.

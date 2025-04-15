@@ -205,6 +205,16 @@ public class WalletService: WalletServiceDescriptor {
 //         //   guard let info = try? decoder.decode(RootInvitation.self, from: data) else {
 //                throw WalletError.failedToParse
 //            }
+            
+            let stubInvitation = InvitationPreviewInfo(
+                           id: "604fc1b5-f0e6-4d0e-9fab-a42ad8136560",
+                           url: URL(string: "https://dcvsms917-ap4.csda.gov.au:9720/diagency/a2a/v1/messages/e68870ea-c817-43e6-955e-1ce1d98a10a9/invitation?id=604fc1b5-f0e6-4d0e-9fab-a42ad8136560")!,
+                           label: "issuer_1",
+                           comment: "This is a test invitation",
+                           type: .invitation,
+                           formats: ["didcomm/aip2;env=rfc19"],
+                           jsonRepresentation: nil // or Data("{}".utf8) if needed
+                       )
             print("✅ SUCCESS INVITATION: \(stubInvitation.label)")
 
             

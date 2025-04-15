@@ -392,13 +392,13 @@ public class WalletService: WalletServiceDescriptor {
     }
     
     /// Process a credential for the wallet using a credential preview.
-    public func processCredential(with preview: CredentialPreviewInfo, action: CredentialInfo.Action = .accepted) async throws {
+    public func processCredential(with preview: CredentialPreviewInfo, action: CredentialAction = .accepted) async throws {
         try await processInvitation(using: preview.url, forPreview: false)
         try await processCredential(with: preview.id, action: action)
     }
 
     /// Process a credential for the wallet using an identifier for the credential.
-    public func processCredential(with identifier: String, action: CredentialInfo.Action = .accepted) async throws {
+    public func processCredential(with identifier: String, action: CredentialAction = .accepted) async throws {
         let url = URL(string: "\(self.baseUri.absoluteString)/credentials/\(identifier)")!
         let body = "{\"state\":\"\(action)\"}".data(using: .utf8)!
         let resource = HTTPResource<Credential?>(.patch, url: url, accept: .json, contentType: .json, body: body, headers: self.headers()) { data, _ in

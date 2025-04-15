@@ -46,10 +46,10 @@ public protocol WalletServiceDescriptor {
     
     /// A delegate that the wallet service informs about the success of credential operations.
     var delegate: (any WalletServiceDelegate)? { get set }
-    
-    /// The key used in HTTP headers for authentication (e.g. "Authorization" or "vc-jwt")
-    var authHeaderKey: String { get }
-    
+
+    /// A closure providing headers for requests.
+    var headers: () -> [String: String] { get set }
+
     /// Refresh the OAuth token associated with the registered wallet.
     /// - Parameters:
     ///   - refreshToken: The refresh token of the existing wallet registration.
@@ -119,17 +119,9 @@ public class WalletService: WalletServiceDescriptor {
     nonisolated public let refreshUri: URL
     nonisolated public let baseUri: URL
     nonisolated public let clientId: String
-    nonisolated public let authHeaderKey: String
-
+    
     /// An object that coordinates a group of related, network data transfer tasks.
     private let urlSession: URLSession
-
-    private let acceptContent = "application/json"
-    
-    /// Configurable auth key (e.g., "Authorization" or "vc-jwt")
-    private var headers: [String: String] {
-        ["Accept": acceptContent, "Content-Type": acceptContent, authHeaderKey: authHeaderKey == "Authorization" ? "Bearer \(accessToken)" : accessToken]
-    }
     
     /// Creates the service with the access token and related endpoint URI's.
     /// - Parameters:
@@ -138,13 +130,13 @@ public class WalletService: WalletServiceDescriptor {
     ///   - baseUri: The location of the endpoint to perform digital credential operatons.
     ///   - clientId: The unique identifier between the service and the client app.
     ///   - certificateTrust: A delegate to handle session-level certificate pinning.
-    ///   - authHeaderKey: Optional override for header name. Defaults to "Authorization"
-    public init(token accessToken: String, refreshUri: URL, baseUri: URL, clientId: String, certificateTrust: URLSessionDelegate? = nil, authHeaderKey: String = "Authorization") {
+    ///   - headers: A closure that returns headers for requests.
+    public init(token accessToken: String, refreshUri: URL, baseUri: URL, clientId: String, certificateTrust: URLSessionDelegate? = nil, headers: (() -> [String: String])? = nil) {
         self.accessToken = accessToken
         self.refreshUri = refreshUri
         self.baseUri = baseUri
         self.clientId = clientId
-        self.authHeaderKey = authHeaderKey
+        self.headers = headers ?? { ["Authorization": "Bearer \(accessToken)"] }
 
         if let certificateTrust = certificateTrust {
             self.urlSession = URLSession(configuration: .default, delegate: certificateTrust, delegateQueue: nil)
@@ -180,7 +172,7 @@ public class WalletService: WalletServiceDescriptor {
     
     public func retrieveInvitations() async throws -> [InvitationInfo] {
         // Resource for obtaining invitation, this requires a custom parser to only decode the items JSON array.
-        let resource = HTTPResource<[InvitationInfo]>(.get, url: self.baseUri.appendingPathComponent("invitations"), headers: headers) { data, response in
+        let resource = HTTPResource<[InvitationInfo]>(.get, url: self.baseUri.appendingPathComponent("invitations"), headers: self.headers()) { data, response in
             // Create a JSONDecoder for custom parsing.
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .secondsSince1970
@@ -206,18 +198,6 @@ public class WalletService: WalletServiceDescriptor {
             // Create a JSONDecoder for custom parsing.
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .millisecondsSince1970
-            
-            let stubInvitation = InvitationPreviewInfo(
-                id: "604fc1b5-f0e6-4d0e-9fab-a42ad8136560",
-                url: URL(string: "https://dcvsms917-ap4.csda.gov.au:9720/diagency/a2a/v1/messages/e68870ea-c817-43e6-955e-1ce1d98a10a9/invitation?id=604fc1b5-f0e6-4d0e-9fab-a42ad8136560")!,
-                label: "issuer_1",
-                comment: "This is a test invitation",
-                type: .invitation,
-                formats: ["didcomm/aip2;env=rfc19"],
-                jsonRepresentation: nil // or Data("{}".utf8) if needed
-            )
-            
-            
             
             /// Decode the invitation processor response.
 //            guard let info = try? decoder.decode(RootInvitation.self, from: data) else {
@@ -260,7 +240,7 @@ public class WalletService: WalletServiceDescriptor {
         }
         """.data(using: .utf8)!
         
-        let resource = HTTPResource<Data>(.put, url: url, accept: .json, contentType: .json, body: body, headers: headers) { data, response in
+        let resource = HTTPResource<Data>(.put, url: url, accept: .json, contentType: .json, body: body, headers: self.headers()) { data, response in
             guard let data, !data.isEmpty else {
                 return .failure(WalletError.dataInitializationFailed)
             }
@@ -276,7 +256,7 @@ public class WalletService: WalletServiceDescriptor {
     public func retrieveProofRequests(filter state: VerificationState = .passed) async throws -> [VerificationInfo] {
         // Resource for obtaining proof request, this requires a custom parser to only decode the items JSON array.
         let url = URL(string: "\(self.baseUri.absoluteString)/verifications?state=\(state.rawValue)")!
-        let resource = HTTPResource<[VerificationInfo]>(.get, url: url, headers: ["Authorization": "Bearer \(self.accessToken)"]) { data, response in
+        let resource = HTTPResource<[VerificationInfo]>(.get, url: url, headers: self.headers()) { data, response in
             // Create a JSONDecoder for custom parsing.
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .secondsSince1970
@@ -311,7 +291,7 @@ public class WalletService: WalletServiceDescriptor {
         }
         """.data(using: .utf8)!
         
-        let resource = HTTPResource<Data>(.patch, url: url, accept: .json, contentType: .json, body: body, headers: headers) { data, response in
+        let resource = HTTPResource<Data>(.patch, url: url, accept: .json, contentType: .json, body: body, headers: self.headers()) { data, response in
             guard let data, !data.isEmpty else {
                 return .failure(WalletError.dataInitializationFailed)
             }
@@ -369,7 +349,7 @@ public class WalletService: WalletServiceDescriptor {
         let url = URL(string: "\(self.baseUri.absoluteString)/credentials?filter={\"state\":\"\(state.rawValue)\"}")!
         
         // Resource for obtaining credentials, this requires a custom parser to only decode the items JSON array.
-        let resource = HTTPResource<[Credential]>(.get, url: url, headers: headers) { data, response in
+        let resource = HTTPResource<[Credential]>(.get, url: url, headers: self.headers()) { data, response in
             // Create a JSONDecoder for custom parsing.
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .secondsSince1970
@@ -395,7 +375,7 @@ public class WalletService: WalletServiceDescriptor {
         let url = URL(string: "\(self.baseUri.absoluteString)/credentials/\(identifier)")!
         
         // Resource for obtaining credentials..
-        let resource = HTTPResource<Credential>(json: .get, url: url, headers: headers)
+        let resource = HTTPResource<Credential>(json: .get, url: url, headers: self.headers())
         
         return try await self.urlSession.dataTask(for: resource)
     }
@@ -414,7 +394,7 @@ public class WalletService: WalletServiceDescriptor {
         """.data(using: .utf8)!
         
         // Resource for obtaining credentials, this requires a custom parser to only decode the items JSON array.
-        let resource = HTTPResource<Credential?>(.patch, url: url, accept: .json, contentType: .json, body: body, headers: headers) { data, response in
+        let resource = HTTPResource<Credential?>(.patch, url: url, accept: .json, contentType: .json, body: body, headers: self.headers()) { data, response in
             // Create a JSONDecoder for custom parsing.
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .millisecondsSince1970
@@ -445,9 +425,8 @@ public class WalletService: WalletServiceDescriptor {
     }
     
     public func deleteCredential(with identifier: String) async throws {
-        let resource = HTTPResource(.delete, url: self.baseUri.appendingPathComponent("credentials/\(identifier)"), headers: headers)
+        let resource = HTTPResource(.delete, url: self.baseUri.appendingPathComponent("credentials/\(identifier)"), headers: self.headers())
         return try await self.urlSession.dataTask(for: resource)
     }
 }
  
-

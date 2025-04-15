@@ -119,7 +119,7 @@ public class WalletService: WalletServiceDescriptor {
     nonisolated public let refreshUri: URL
     nonisolated public let baseUri: URL
     nonisolated public let clientId: String
-    nonisolated public var headers: () -> [String: String]
+    nonisolated public var headers: () -> [String: String]?
     
     /// An object that coordinates a group of related, network data transfer tasks.
     private let urlSession: URLSession

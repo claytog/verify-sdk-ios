@@ -198,7 +198,7 @@ public class WalletService: WalletServiceDescriptor {
         
             // Create a JSONDecoder for custom parsing.
             let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .convertFromSnakeCase
+            decoder.keyDecodingStrategy = .convertFromSnakeCase
             
             // Decode the invitation processor response.
             guard let info = try? decoder.decode(ProcessInvitationResponse.self, from: data) else {

@@ -200,6 +200,7 @@ public class WalletService: WalletServiceDescriptor {
             let decoder = JSONDecoder()
             decoder.keyDecodingStrategy = .convertFromSnakeCase
             
+            print("Attempting decode of ProcessInvitationResponse")
             // Decode the invitation processor response.
             guard let info = try? decoder.decode(ProcessInvitationResponse.self, from: data) else {
                 throw WalletError.failedToParse

@@ -106,7 +106,7 @@ public protocol WalletServiceDescriptor {
     ///   - action: The action to perform for the credential offer.
     func processCredential(with preview: CredentialPreviewInfo, action: CredentialAction) async throws
     
-    func processCredential(with identifier: String, action: CredentialAction = .accepted) async throws
+    func processCredential(with identifier: String, action: CredentialAction) async throws
     
     /// Deletes a credential.
     /// - Parameters:

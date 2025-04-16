@@ -198,11 +198,10 @@ public class WalletService: WalletServiceDescriptor {
         
             // Create a JSONDecoder for custom parsing.
             let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .millisecondsSince1970
+            decoder.dateDecodingStrategy = .convertFromSnakeCase
             
-            / Decode the invitation processor response.
-            guard let info = try? decoder.decode(RootInvitation.self, from: data) else {
-         //   guard let info = try? decoder.decode(RootInvitation.self, from: data) else {
+            // Decode the invitation processor response.
+            guard let info = try? decoder.decode(ProcessInvitationResponse.self, from: data) else {
                 throw WalletError.failedToParse
             }
             
@@ -215,7 +214,7 @@ public class WalletService: WalletServiceDescriptor {
                            formats: ["didcomm/aip2;env=rfc19"],
                            jsonRepresentation: nil // or Data("{}".utf8) if needed
                        )
-            print("✅ SUCCESS INVITATION: \(stubInvitation.label)")
+            print("✅ SUCCESS PROCESS INVITATION: \(info.modId)")
 
             
 //            /// Determine what type of invitation to return.

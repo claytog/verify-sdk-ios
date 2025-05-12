@@ -221,53 +221,25 @@ public class WalletService: WalletServiceDescriptor {
          //   return CredentialPreviewInfo(id: stubInvitation.id, url: stubInvitation.url, label: stubInvitation.label, comment: stubInvitation.label, jsonRepresentation: nil, documentTypes: [""])
     }
     
-    func decodeJWTToInvitationPreviewInfo(jwtPayloadBase64: String) -> InvitationPreviewInfo? {
-        var base64 = jwtPayloadBase64
-            .replacingOccurrences(of: "-", with: "+")
-            .replacingOccurrences(of: "_", with: "/")
-        while base64.count % 4 != 0 {
-            base64 += "="
-        }
-
-        guard let data = Data(base64Encoded: base64) else {
-            print("❌ base64 decode failed")
+    func decodeInvitationPreviewInfo(from rawData: Any) -> InvitationPreviewInfo? {
+        guard let jsonData = try? JSONSerialization.data(withJSONObject: rawData, options: []) else {
+            print("❌ Failed to serialize rawData to JSON")
             return nil
         }
 
-        guard let jsonObject = try? JSONSerialization.jsonObject(with: data, options: []),
-              let json = jsonObject as? [String: Any] else {
-            print("❌ JSON deserialization failed")
-            if let string = String(data: data, encoding: .utf8) {
-                print("🪵 Raw payload JSON string: \(string)")
-            }
+        guard let json = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any] else {
+            print("❌ Failed to convert to [String: Any]")
             return nil
         }
 
-        print("✅ Decoded top-level JSON: \(json)")
-
-        guard let invitation = json["invitation"] as? [String: Any] else {
-            print("❌ Missing 'invitation' field in JSON")
-            return nil
-        }
-
-        guard let id = invitation["@id"] as? String else {
-            print("❌ Missing '@id'")
-            return nil
-        }
-
-        guard let urlString = json["url"] as? String,
-              let url = URL(string: urlString) else {
-            print("❌ Invalid or missing 'url'")
-            return nil
-        }
-
-        guard let typeRaw = invitation["@type"] as? String else {
-            print("❌ Missing '@type'")
-            return nil
-        }
-
-        guard let type = InvitationPreviewInfo.InvitationType(rawValue: typeRaw) else {
-            print("❌ Unsupported type value: \(typeRaw)")
+        guard let invitation = json["invitation"] as? [String: Any],
+              let id = invitation["@id"] as? String,
+              let urlString = json["url"] as? String,
+              let url = URL(string: urlString),
+              let typeRaw = invitation["@type"] as? String,
+              let type = InvitationPreviewInfo.InvitationType(rawValue: typeRaw)
+        else {
+            print("❌ Missing required fields")
             return nil
         }
 
@@ -282,7 +254,7 @@ public class WalletService: WalletServiceDescriptor {
             comment: comment,
             type: type,
             formats: formats,
-            jsonRepresentation: jwtPayloadBase64.data(using: .utf8)
+            jsonRepresentation: jsonData
         )
     }
     

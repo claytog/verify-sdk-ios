@@ -229,16 +229,45 @@ public class WalletService: WalletServiceDescriptor {
             base64 += "="
         }
 
-        guard let data = Data(base64Encoded: base64),
-              let jsonObject = try? JSONSerialization.jsonObject(with: data, options: []),
-              let json = jsonObject as? [String: Any],
-              let invitation = json["invitation"] as? [String: Any],
-              let id = invitation["@id"] as? String,
-              let urlString = json["url"] as? String,
-              let url = URL(string: urlString),
-              let typeRaw = invitation["@type"] as? String,
-              let type = InvitationPreviewInfo.InvitationType(rawValue: typeRaw)
-        else {
+        guard let data = Data(base64Encoded: base64) else {
+            print("❌ base64 decode failed")
+            return nil
+        }
+
+        guard let jsonObject = try? JSONSerialization.jsonObject(with: data, options: []),
+              let json = jsonObject as? [String: Any] else {
+            print("❌ JSON deserialization failed")
+            if let string = String(data: data, encoding: .utf8) {
+                print("🪵 Raw payload JSON string: \(string)")
+            }
+            return nil
+        }
+
+        print("✅ Decoded top-level JSON: \(json)")
+
+        guard let invitation = json["invitation"] as? [String: Any] else {
+            print("❌ Missing 'invitation' field in JSON")
+            return nil
+        }
+
+        guard let id = invitation["@id"] as? String else {
+            print("❌ Missing '@id'")
+            return nil
+        }
+
+        guard let urlString = json["url"] as? String,
+              let url = URL(string: urlString) else {
+            print("❌ Invalid or missing 'url'")
+            return nil
+        }
+
+        guard let typeRaw = invitation["@type"] as? String else {
+            print("❌ Missing '@type'")
+            return nil
+        }
+
+        guard let type = InvitationPreviewInfo.InvitationType(rawValue: typeRaw) else {
+            print("❌ Unsupported type value: \(typeRaw)")
             return nil
         }
 

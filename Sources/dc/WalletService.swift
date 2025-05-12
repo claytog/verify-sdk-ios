@@ -208,14 +208,18 @@ public class WalletService: WalletServiceDescriptor {
             decoder.keyDecodingStrategy = .convertFromSnakeCase
             
             
-            let examplePreviewDescriptor = InvitationPreviewInfo(
-                id: "preview-123",
+            // Example static instance
+            let exampleInvitationPreview = InvitationPreviewInfo(
+                id: "invite-001",
                 url: URL(string: "https://example.com/invitation")!,
-                label: "Example Credential",
-                comment: "Example comment for preview",
-                jsonRepresentation: "{\"name\":\"John Doe\"}".data(using: .utf8),
-                documentTypes: ["example.document.type"]
+                label: "Test Invitation",
+                comment: "This is a test invitation preview",
+                type: .offerCredential,  // assuming .didcomm is a valid InvitationType case
+                formats: ["jwt_vc", "ldp_vc"],
+                jsonRepresentation: "{\"subject\":\"Alice\"}".data(using: .utf8),
+                documentTypes: ["test.document.type"]
             )
+            
             
             print("Attempting decode of ProcessInvitationResponse")
             // Decode the invitation processor response.
@@ -223,7 +227,7 @@ public class WalletService: WalletServiceDescriptor {
                 throw WalletError.failedToParse
             }
             
-            return examplePreviewDescriptor
+            return exampleInvitationPreview
 //            /// Determine what type of invitation to return.
 //            switch info.type {
 //            case .offerCredential:

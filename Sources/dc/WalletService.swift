@@ -231,24 +231,20 @@ public class WalletService: WalletServiceDescriptor {
 
         guard let data = Data(base64Encoded: base64),
               let jsonObject = try? JSONSerialization.jsonObject(with: data, options: []),
-              let json = jsonObject as? [String: Any] else {
-            return nil
-        }
-
-        // The payload is wrapped in an "invitation" field
-        guard let invitation = json["invitation"] as? [String: Any],
+              let json = jsonObject as? [String: Any],
+              let invitation = json["invitation"] as? [String: Any],
               let id = invitation["@id"] as? String,
               let urlString = json["url"] as? String,
               let url = URL(string: urlString),
               let typeRaw = invitation["@type"] as? String,
-              let type = InvitationType(rawValue: typeRaw) else {
+              let type = InvitationPreviewInfo.InvitationType(rawValue: typeRaw)
+        else {
             return nil
         }
 
         let label = invitation["label"] as? String
         let comment = invitation["comment"] as? String
         let formats = json["formats"] as? [String]
-        let documentTypes = json["documentTypes"] as? [String] ?? []
 
         return InvitationPreviewInfo(
             id: id,
@@ -257,8 +253,7 @@ public class WalletService: WalletServiceDescriptor {
             comment: comment,
             type: type,
             formats: formats,
-            jsonRepresentation: jwtPayloadBase64.data(using: .utf8),
-            documentTypes: documentTypes
+            jsonRepresentation: jwtPayloadBase64.data(using: .utf8)
         )
     }
     

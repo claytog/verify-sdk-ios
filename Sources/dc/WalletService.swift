@@ -202,7 +202,7 @@ public class WalletService: WalletServiceDescriptor {
             
             print("processInvitation JWT:\n\(jwtString)")
             
-            if let invitationPreviewInfo = decodeInvitationPreviewInfo(jwtString) {
+            if let invitationPreviewInfo = decodeBase64JSONStringToInvitationPreviewInfo(jwtString) {
                 print("invitationPreviewInfo: \(invitationPreviewInfo)")
                 return invitationPreviewInfo
             } else {

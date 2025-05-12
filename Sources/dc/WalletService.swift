@@ -221,9 +221,12 @@ public class WalletService: WalletServiceDescriptor {
          //   return CredentialPreviewInfo(id: stubInvitation.id, url: stubInvitation.url, label: stubInvitation.label, comment: stubInvitation.label, jsonRepresentation: nil, documentTypes: [""])
     }
     
-    func decodeBase64JSONStringToInvitationPreviewInfo(_ base64JSONString: String) -> InvitationPreviewInfo? {
-        // Decode base64 string
-        var base64 = base64JSONString
+    func decodeBase64JSONStringToInvitationPreviewInfo(_ possiblyQuotedBase64: String) -> InvitationPreviewInfo? {
+        // Remove surrounding quotes if present
+        let trimmed = possiblyQuotedBase64.trimmingCharacters(in: CharacterSet(charactersIn: "\""))
+
+        // Standard base64 decode
+        var base64 = trimmed
             .replacingOccurrences(of: "-", with: "+")
             .replacingOccurrences(of: "_", with: "/")
         while base64.count % 4 != 0 {
@@ -231,28 +234,22 @@ public class WalletService: WalletServiceDescriptor {
         }
 
         guard let data = Data(base64Encoded: base64) else {
-            print("❌ Failed to base64 decode")
+            print("❌ Base64 decoding failed")
             return nil
         }
 
-        // Try to parse as JSON
-        guard let json = try? JSONSerialization.jsonObject(with: data, options: []),
-              let dict = json as? [String: Any] else {
-            print("❌ Failed to parse base64-decoded string as JSON")
-            if let debugStr = String(data: data, encoding: .utf8) {
-                print("🪵 Raw decoded JSON string:\n\(debugStr)")
-            }
+        guard let jsonObject = try? JSONSerialization.jsonObject(with: data),
+              let dict = jsonObject as? [String: Any] else {
+            print("❌ JSON decoding failed")
             return nil
         }
 
-        // Extract expected fields
         guard let invitation = dict["invitation"] as? [String: Any],
               let id = invitation["@id"] as? String,
               let urlString = dict["url"] as? String,
               let url = URL(string: urlString),
               let typeRaw = invitation["@type"] as? String,
-              let type = InvitationPreviewInfo.InvitationType(rawValue: typeRaw)
-        else {
+              let type = InvitationPreviewInfo.InvitationType(rawValue: typeRaw) else {
             print("❌ Missing required fields")
             return nil
         }
@@ -268,7 +265,7 @@ public class WalletService: WalletServiceDescriptor {
             comment: comment,
             type: type,
             formats: formats,
-            jsonRepresentation: data // ✅ This is the decoded JSON data
+            jsonRepresentation: data
         )
     }
     

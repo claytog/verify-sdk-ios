@@ -197,11 +197,19 @@ public class WalletService: WalletServiceDescriptor {
     public func previewInvitation(using offerUrl: URL) async throws -> any PreviewDescriptor {
         let data = try await processInvitation(using: offerUrl)
 
-        if let invitationPreviewInfo = decodeInvitationPreviewInfo(from: data) {
-            print("invitationPreviewInfo: \(invitationPreviewInfo)")
-            return invitationPreviewInfo
+        if let jsonData = try? JSONEncoder().encode(data),
+           let jwtString = String(data: jsonData, encoding: .utf8) {
+            
+            print("processInvitation JWT:\n\(jwtString)")
+            
+            if let invitationPreviewInfo = decodeInvitationPreviewInfo(jwtString) {
+                print("invitationPreviewInfo: \(invitationPreviewInfo)")
+                return invitationPreviewInfo
+            } else {
+                throw NSError(domain: "PreviewError", code: 2, userInfo: [NSLocalizedDescriptionKey: "Failed to decode JWT to InvitationPreviewInfo"])
+            }
         } else {
-            throw NSError(domain: "PreviewError", code: 2, userInfo: [NSLocalizedDescriptionKey: "Failed to decode JWT to InvitationPreviewInfo"])
+            throw NSError(domain: "PreviewError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to encode processInvitation result to JWT string"])
         }
 //            /// Determine what type of invitation to return.
 //            switch info.type {
@@ -213,20 +221,34 @@ public class WalletService: WalletServiceDescriptor {
          //   return CredentialPreviewInfo(id: stubInvitation.id, url: stubInvitation.url, label: stubInvitation.label, comment: stubInvitation.label, jsonRepresentation: nil, documentTypes: [""])
     }
     
-    func decodeInvitationPreviewInfo(from rawData: Any) -> InvitationPreviewInfo? {
-        guard let jsonData = try? JSONSerialization.data(withJSONObject: rawData, options: []) else {
-            print("❌ Failed to serialize rawData to JSON")
+    func decodeBase64JSONStringToInvitationPreviewInfo(_ base64JSONString: String) -> InvitationPreviewInfo? {
+        // Decode base64 string
+        var base64 = base64JSONString
+            .replacingOccurrences(of: "-", with: "+")
+            .replacingOccurrences(of: "_", with: "/")
+        while base64.count % 4 != 0 {
+            base64 += "="
+        }
+
+        guard let data = Data(base64Encoded: base64) else {
+            print("❌ Failed to base64 decode")
             return nil
         }
 
-        guard let json = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any] else {
-            print("❌ Failed to convert to [String: Any]")
+        // Try to parse as JSON
+        guard let json = try? JSONSerialization.jsonObject(with: data, options: []),
+              let dict = json as? [String: Any] else {
+            print("❌ Failed to parse base64-decoded string as JSON")
+            if let debugStr = String(data: data, encoding: .utf8) {
+                print("🪵 Raw decoded JSON string:\n\(debugStr)")
+            }
             return nil
         }
 
-        guard let invitation = json["invitation"] as? [String: Any],
+        // Extract expected fields
+        guard let invitation = dict["invitation"] as? [String: Any],
               let id = invitation["@id"] as? String,
-              let urlString = json["url"] as? String,
+              let urlString = dict["url"] as? String,
               let url = URL(string: urlString),
               let typeRaw = invitation["@type"] as? String,
               let type = InvitationPreviewInfo.InvitationType(rawValue: typeRaw)
@@ -237,7 +259,7 @@ public class WalletService: WalletServiceDescriptor {
 
         let label = invitation["label"] as? String
         let comment = invitation["comment"] as? String
-        let formats = json["formats"] as? [String]
+        let formats = dict["formats"] as? [String]
 
         return InvitationPreviewInfo(
             id: id,
@@ -246,7 +268,7 @@ public class WalletService: WalletServiceDescriptor {
             comment: comment,
             type: type,
             formats: formats,
-            jsonRepresentation: jsonData
+            jsonRepresentation: data // ✅ This is the decoded JSON data
         )
     }
     

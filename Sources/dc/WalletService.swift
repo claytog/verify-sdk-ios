@@ -199,34 +199,39 @@ public class WalletService: WalletServiceDescriptor {
             let data = try await processInvitation(using: offerUrl)
         
             if let jsonData = try? JSONEncoder().encode(data),
-               let jsonString = String(data: jsonData, encoding: .utf8) {
+               let jwtString = String(data: jsonData, encoding: .utf8) {
                 print("processInvitation Data as JSON:\n\(jsonString)")
             }
             
+            let invitationPreviewInfo: InvitationPreviewInfo = decodeJWTToInvitationPreviewInfo(jwtPayloadBase64: jwtString)
+            
+            
+            print("invitationPreviewInfo: \(invitationPreviewInfo)")
+            
             // Create a JSONDecoder for custom parsing.
-            let decoder = JSONDecoder()
-            decoder.keyDecodingStrategy = .convertFromSnakeCase
+//            let decoder = JSONDecoder()
+//            decoder.keyDecodingStrategy = .convertFromSnakeCase
             
             
-            // Example static instance
-            let exampleInvitationPreview = InvitationPreviewInfo(
-                id: "invite-001",
-                url: URL(string: "https://example.com/invitation")!,
-                label: "Test Invitation",
-                comment: "This is a test invitation preview",
-                type: .offerCredential,  // assumes InvitationType.didcomm exists
-                formats: ["jwt_vc", "ldp_vc"],
-                jsonRepresentation: "{\"subject\":\"Alice\"}".data(using: .utf8)
-            )
+//            // Example static instance
+//            let exampleInvitationPreview = InvitationPreviewInfo(
+//                id: "invite-001",
+//                url: URL(string: "https://example.com/invitation")!,
+//                label: "Test Invitation",
+//                comment: "This is a test invitation preview",
+//                type: .offerCredential,  // assumes InvitationType.didcomm exists
+//                formats: ["jwt_vc", "ldp_vc"],
+//                jsonRepresentation: "{\"subject\":\"Alice\"}".data(using: .utf8)
+//            )
+//            
+//            
+//            print("Attempting decode of ProcessInvitationResponse")
+//            // Decode the invitation processor response.
+//            guard let info = try? decoder.decode(InvitationPreviewInfo.self, from: data) else {
+//                throw WalletError.failedToParse
+//            }
             
-            
-            print("Attempting decode of ProcessInvitationResponse")
-            // Decode the invitation processor response.
-            guard let info = try? decoder.decode(ProcessInvitationResponse.self, from: data) else {
-                throw WalletError.failedToParse
-            }
-            
-            return exampleInvitationPreview
+            return invitationPreviewInfo
 //            /// Determine what type of invitation to return.
 //            switch info.type {
 //            case .offerCredential:
@@ -239,6 +244,47 @@ public class WalletService: WalletServiceDescriptor {
         catch let error {
             throw error
         }
+    }
+    
+    func decodeJWTToInvitationPreviewInfo(jwtPayloadBase64: String) -> InvitationPreviewInfo? {
+        var base64 = jwtPayloadBase64
+            .replacingOccurrences(of: "-", with: "+")
+            .replacingOccurrences(of: "_", with: "/")
+        while base64.count % 4 != 0 {
+            base64 += "="
+        }
+
+        guard let data = Data(base64Encoded: base64),
+              let jsonObject = try? JSONSerialization.jsonObject(with: data, options: []),
+              let json = jsonObject as? [String: Any] else {
+            return nil
+        }
+
+        // The payload is wrapped in an "invitation" field
+        guard let invitation = json["invitation"] as? [String: Any],
+              let id = invitation["@id"] as? String,
+              let urlString = json["url"] as? String,
+              let url = URL(string: urlString),
+              let typeRaw = invitation["@type"] as? String,
+              let type = InvitationType(rawValue: typeRaw) else {
+            return nil
+        }
+
+        let label = invitation["label"] as? String
+        let comment = invitation["comment"] as? String
+        let formats = json["formats"] as? [String]
+        let documentTypes = json["documentTypes"] as? [String] ?? []
+
+        return InvitationPreviewInfo(
+            id: id,
+            url: url,
+            label: label,
+            comment: comment,
+            type: type,
+            formats: formats,
+            jsonRepresentation: jwtPayloadBase64.data(using: .utf8),
+            documentTypes: documentTypes
+        )
     }
     
     /// Process an invitation received by the wallet.

@@ -198,6 +198,11 @@ public class WalletService: WalletServiceDescriptor {
         do {
             let data = try await processInvitation(using: offerUrl)
         
+            if let jsonData = try? JSONEncoder().encode(data),
+               let jsonString = String(data: jsonData, encoding: .utf8) {
+                print("processInvitation Data as JSON:\n\(jsonString)")
+            }
+            
             // Create a JSONDecoder for custom parsing.
             let decoder = JSONDecoder()
             decoder.keyDecodingStrategy = .convertFromSnakeCase

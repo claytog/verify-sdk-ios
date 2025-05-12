@@ -207,21 +207,31 @@ public class WalletService: WalletServiceDescriptor {
             let decoder = JSONDecoder()
             decoder.keyDecodingStrategy = .convertFromSnakeCase
             
+            
+            let examplePreviewDescriptor = PreviewDescriptor(
+                id: "preview-123",
+                url: URL(string: "https://example.com/invitation")!,
+                label: "Example Credential",
+                comment: "Example comment for preview",
+                jsonRepresentation: "{\"name\":\"John Doe\"}".data(using: .utf8),
+                documentTypes: ["example.document.type"]
+            )
+            
             print("Attempting decode of ProcessInvitationResponse")
             // Decode the invitation processor response.
             guard let info = try? decoder.decode(ProcessInvitationResponse.self, from: data) else {
                 throw WalletError.failedToParse
             }
-            /// Determine what type of invitation to return.
-            switch info.type {
-            case .offerCredential:
-                return CredentialPreviewInfo(using: info)
-            case .requestPresentation:
-                return VerificationPreviewInfo(using: info)
-            }
-            return CredentialPreviewInfo(id: stubInvitation.id, url: stubInvitation.url, label: stubInvitation.label, comment: stubInvitation.label, jsonRepresentation: nil, documentTypes: [""])
             
-            return CredentialPreviewInfo(id: info.invitation.id, url: info.invitation.url, label: info.invitation.label, comment: info.invitation.label, jsonRepresentation: nil, documentTypes: [""])
+            return examplePreviewDescriptor
+//            /// Determine what type of invitation to return.
+//            switch info.type {
+//            case .offerCredential:
+//                return CredentialPreviewInfo(using: info)
+//            case .requestPresentation:
+//                return VerificationPreviewInfo(using: info)
+//            }
+         //   return CredentialPreviewInfo(id: stubInvitation.id, url: stubInvitation.url, label: stubInvitation.label, comment: stubInvitation.label, jsonRepresentation: nil, documentTypes: [""])
         }
         catch let error {
             throw error

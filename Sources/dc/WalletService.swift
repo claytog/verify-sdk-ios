@@ -221,11 +221,11 @@ public class WalletService: WalletServiceDescriptor {
          //   return CredentialPreviewInfo(id: stubInvitation.id, url: stubInvitation.url, label: stubInvitation.label, comment: stubInvitation.label, jsonRepresentation: nil, documentTypes: [""])
     }
     
-    func decodeBase64JSONStringToInvitationPreviewInfo(_ possiblyQuotedBase64: String) -> InvitationPreviewInfo? {
-        // Remove surrounding quotes if present
-        let trimmed = possiblyQuotedBase64.trimmingCharacters(in: CharacterSet(charactersIn: "\""))
+    func decodeBase64JSONStringToInvitationPreviewInfo(_ base64JSONString: String) -> InvitationPreviewInfo? {
+        // Remove surrounding quotes if any
+        let trimmed = base64JSONString.trimmingCharacters(in: CharacterSet(charactersIn: "\""))
 
-        // Standard base64 decode
+        // Decode base64 string
         var base64 = trimmed
             .replacingOccurrences(of: "-", with: "+")
             .replacingOccurrences(of: "_", with: "/")
@@ -239,18 +239,18 @@ public class WalletService: WalletServiceDescriptor {
         }
 
         guard let jsonObject = try? JSONSerialization.jsonObject(with: data),
-              let dict = jsonObject as? [String: Any] else {
-            print("❌ JSON decoding failed")
+              let dict = jsonObject as? [String: Any],
+              let invitation = dict["invitation"] as? [String: Any] else {
+            print("❌ JSON decoding or invitation field failed")
             return nil
         }
 
-        guard let invitation = dict["invitation"] as? [String: Any],
-              let id = invitation["@id"] as? String,
-              let urlString = dict["url"] as? String,
-              let url = URL(string: urlString),
+        guard let id = invitation["@id"] as? String,
               let typeRaw = invitation["@type"] as? String,
-              let type = InvitationPreviewInfo.InvitationType(rawValue: typeRaw) else {
-            print("❌ Missing required fields")
+              let type = InvitationPreviewInfo.InvitationType(rawValue: typeRaw),
+              let urlString = invitation["url"] as? String,
+              let url = URL(string: urlString) else {
+            print("❌ Missing required fields inside 'invitation'")
             return nil
         }
 

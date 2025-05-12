@@ -214,10 +214,9 @@ public class WalletService: WalletServiceDescriptor {
                 url: URL(string: "https://example.com/invitation")!,
                 label: "Test Invitation",
                 comment: "This is a test invitation preview",
-                type: .offerCredential,  // assuming .didcomm is a valid InvitationType case
+                type: .offerCredential,  // assumes InvitationType.didcomm exists
                 formats: ["jwt_vc", "ldp_vc"],
-                jsonRepresentation: "{\"subject\":\"Alice\"}".data(using: .utf8),
-                documentTypes: ["test.document.type"]
+                jsonRepresentation: "{\"subject\":\"Alice\"}".data(using: .utf8)
             )
             
             

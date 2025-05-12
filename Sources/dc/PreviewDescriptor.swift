@@ -52,12 +52,11 @@ extension InvitationPreviewInfo {
     enum InvitationType: String, Decodable {
         /// Offer a credential.
         case offerCredential = "https://didcomm.org/issue-credential/2.0/offer-credential"
-        /// Receive an invitation.
-        case invitation = "https://didcomm.org/didexchange/1.0/invitation"
+        
         /// Request proof presentation.
         case requestPresentation = "https://didcomm.org/present-proof/2.0/request-presentation"
         
-        case outOfBand = "https://didcomm.org/out-of-band/1.0/invitation" // ✅ Add this
+        //  case outOfBand = "https://didcomm.org/out-of-band/1.0/invitation" // ✅ Add this
     }
     
     /// A requested credential that the holder can use to preview the credential.

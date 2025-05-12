@@ -194,41 +194,31 @@ public class WalletService: WalletServiceDescriptor {
         return try await self.urlSession.dataTask(for: resource)
     }
     
-    public func previewInvitation(using offerUrl: URL) async throws -> any PreviewDescriptor {
-        let data = try await processInvitation(using: offerUrl)
-
-        if let responseFromPreviewInvitation = data as ? VerificationPreviewInfo {
-            try await service.processProofRequest(using: responseFromPreviewInvitation, state: .init())
-        }
+    public func previewInvitation(using offerUrl: URL) async throws -> (any PreviewDescriptor) {
+        do {
+            let data = try await processInvitation(using: offerUrl)
         
-        return try! JSONDecoder().decode(type: PreviewInfo.self, from: data as! Data) as! any PreviewDescriptor
-//
-//        if let jsonData = try? JSONEncoder().encode(data),
-//           let jwtString = String(data: jsonData, encoding: .utf8) {
-//            
-//            print("processInvitation JWT:\n\n\(jwtString)")
-//            
-//            if let responseFromPreviewInvitation = data as ? VerificationPreviewInfo {
-//                try await service.processProofRequest(using: responseFromPreviewInvitation, state: .init())
-//            }
-//            
-////            if let invitationPreviewInfo = decodeBase64JSONStringToInvitationPreviewInfo(jwtString) {
-////                print("invitationPreviewInfo: \(invitationPreviewInfo)")
-////                return invitationPreviewInfo
-////            } else {
-////                throw NSError(domain: "PreviewError", code: 2, userInfo: [NSLocalizedDescriptionKey: "Failed to decode JWT to InvitationPreviewInfo"])
-////            }
-//        } else {
-//            throw NSError(domain: "PreviewError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to encode processInvitation result to JWT string"])
-//        }
-//            /// Determine what type of invitation to return.
-//            switch info.type {
-//            case .offerCredential:
-//                return CredentialPreviewInfo(using: info)
-//            case .requestPresentation:
-//                return VerificationPreviewInfo(using: info)
-//            }
-         //   return CredentialPreviewInfo(id: stubInvitation.id, url: stubInvitation.url, label: stubInvitation.label, comment: stubInvitation.label, jsonRepresentation: nil, documentTypes: [""])
+            // Create a JSONDecoder for custom parsing.
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .millisecondsSince1970
+            
+            /// Decode the invitation processor response.
+            guard let info = try? decoder.decode(InvitationPreviewInfo.self, from: data) else {
+                throw WalletError.failedToParse
+            }
+            
+            /// Determine what type of invitation to return.
+            switch info.type {
+            case .offerCredential:
+                return CredentialPreviewInfo(using: info)
+            case .requestPresentation:
+                return VerificationPreviewInfo(using: info)
+            }
+            
+        }
+        catch let error {
+            throw error
+        }
     }
     
     func decodeBase64JSONStringToInvitationPreviewInfo(_ base64JSONString: String) -> InvitationPreviewInfo? {

@@ -198,10 +198,10 @@ public class WalletService: WalletServiceDescriptor {
         do {
             let data = try await processInvitation(using: offerUrl)
         
-            if let jsonData = try? JSONEncoder().encode(data),
-               let jwtString = String(data: jsonData, encoding: .utf8) {
-                print("processInvitation Data as JSON:\n\(jsonString)")
-            }
+//            if let jsonData = try? JSONEncoder().encode(data),
+//               let jwtString = String(data: jsonData, encoding: .utf8) {
+//                print("processInvitation Data as JSON:\n\(jsonString)")
+//            }
             
             let invitationPreviewInfo: InvitationPreviewInfo = decodeJWTToInvitationPreviewInfo(jwtPayloadBase64: jwtString)
             

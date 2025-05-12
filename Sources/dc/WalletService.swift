@@ -194,44 +194,23 @@ public class WalletService: WalletServiceDescriptor {
         return try await self.urlSession.dataTask(for: resource)
     }
     
-    public func previewInvitation(using offerUrl: URL) async throws -> (any PreviewDescriptor) {
-        do {
-            let data = try await processInvitation(using: offerUrl)
-        
-            if let jsonData = try? JSONEncoder().encode(data),
-               let jwtString = String(data: jsonData, encoding: .utf8) {
-                print("processInvitation JWT:\n\(jwtString)")
+    public func previewInvitation(using offerUrl: URL) async throws -> any PreviewDescriptor {
+        let data = try await processInvitation(using: offerUrl)
+
+        if let jsonData = try? JSONEncoder().encode(data),
+           let jwtString = String(data: jsonData, encoding: .utf8) {
+            
+            print("processInvitation JWT:\n\(jwtString)")
+            
+            if let invitationPreviewInfo = decodeJWTToInvitationPreviewInfo(jwtPayloadBase64: jwtString) {
+                print("invitationPreviewInfo: \(invitationPreviewInfo)")
+                return invitationPreviewInfo
+            } else {
+                throw NSError(domain: "PreviewError", code: 2, userInfo: [NSLocalizedDescriptionKey: "Failed to decode JWT to InvitationPreviewInfo"])
             }
-            
-            let invitationPreviewInfo: InvitationPreviewInfo = decodeJWTToInvitationPreviewInfo(jwtPayloadBase64: jwtString)
-            
-            
-            print("invitationPreviewInfo: \(invitationPreviewInfo)")
-            
-            // Create a JSONDecoder for custom parsing.
-//            let decoder = JSONDecoder()
-//            decoder.keyDecodingStrategy = .convertFromSnakeCase
-            
-            
-//            // Example static instance
-//            let exampleInvitationPreview = InvitationPreviewInfo(
-//                id: "invite-001",
-//                url: URL(string: "https://example.com/invitation")!,
-//                label: "Test Invitation",
-//                comment: "This is a test invitation preview",
-//                type: .offerCredential,  // assumes InvitationType.didcomm exists
-//                formats: ["jwt_vc", "ldp_vc"],
-//                jsonRepresentation: "{\"subject\":\"Alice\"}".data(using: .utf8)
-//            )
-//            
-//            
-//            print("Attempting decode of ProcessInvitationResponse")
-//            // Decode the invitation processor response.
-//            guard let info = try? decoder.decode(InvitationPreviewInfo.self, from: data) else {
-//                throw WalletError.failedToParse
-//            }
-            
-            return invitationPreviewInfo
+        } else {
+            throw NSError(domain: "PreviewError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to encode processInvitation result to JWT string"])
+        }
 //            /// Determine what type of invitation to return.
 //            switch info.type {
 //            case .offerCredential:
@@ -240,10 +219,6 @@ public class WalletService: WalletServiceDescriptor {
 //                return VerificationPreviewInfo(using: info)
 //            }
          //   return CredentialPreviewInfo(id: stubInvitation.id, url: stubInvitation.url, label: stubInvitation.label, comment: stubInvitation.label, jsonRepresentation: nil, documentTypes: [""])
-        }
-        catch let error {
-            throw error
-        }
     }
     
     func decodeJWTToInvitationPreviewInfo(jwtPayloadBase64: String) -> InvitationPreviewInfo? {

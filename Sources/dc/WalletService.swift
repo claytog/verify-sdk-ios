@@ -197,20 +197,30 @@ public class WalletService: WalletServiceDescriptor {
     public func previewInvitation(using offerUrl: URL) async throws -> any PreviewDescriptor {
         let data = try await processInvitation(using: offerUrl)
 
-        if let jsonData = try? JSONEncoder().encode(data),
-           let jwtString = String(data: jsonData, encoding: .utf8) {
-            
-            print("processInvitation JWT:\n\(jwtString)")
-            
-            if let invitationPreviewInfo = decodeBase64JSONStringToInvitationPreviewInfo(jwtString) {
-                print("invitationPreviewInfo: \(invitationPreviewInfo)")
-                return invitationPreviewInfo
-            } else {
-                throw NSError(domain: "PreviewError", code: 2, userInfo: [NSLocalizedDescriptionKey: "Failed to decode JWT to InvitationPreviewInfo"])
-            }
-        } else {
-            throw NSError(domain: "PreviewError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to encode processInvitation result to JWT string"])
+        if let responseFromPreviewInvitation = data as ? VerificationPreviewInfo {
+            try await service.processProofRequest(using: responseFromPreviewInvitation, state: .init())
         }
+        
+        return try! JSONDecoder().decode(type: PreviewInfo.self, from: data as! Data) as! any PreviewDescriptor
+//
+//        if let jsonData = try? JSONEncoder().encode(data),
+//           let jwtString = String(data: jsonData, encoding: .utf8) {
+//            
+//            print("processInvitation JWT:\n\n\(jwtString)")
+//            
+//            if let responseFromPreviewInvitation = data as ? VerificationPreviewInfo {
+//                try await service.processProofRequest(using: responseFromPreviewInvitation, state: .init())
+//            }
+//            
+////            if let invitationPreviewInfo = decodeBase64JSONStringToInvitationPreviewInfo(jwtString) {
+////                print("invitationPreviewInfo: \(invitationPreviewInfo)")
+////                return invitationPreviewInfo
+////            } else {
+////                throw NSError(domain: "PreviewError", code: 2, userInfo: [NSLocalizedDescriptionKey: "Failed to decode JWT to InvitationPreviewInfo"])
+////            }
+//        } else {
+//            throw NSError(domain: "PreviewError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to encode processInvitation result to JWT string"])
+//        }
 //            /// Determine what type of invitation to return.
 //            switch info.type {
 //            case .offerCredential:

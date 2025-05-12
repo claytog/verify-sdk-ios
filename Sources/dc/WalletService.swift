@@ -221,54 +221,6 @@ public class WalletService: WalletServiceDescriptor {
         }
     }
     
-    func decodeBase64JSONStringToInvitationPreviewInfo(_ base64JSONString: String) -> InvitationPreviewInfo? {
-        // Remove surrounding quotes if any
-        let trimmed = base64JSONString.trimmingCharacters(in: CharacterSet(charactersIn: "\""))
-
-        // Decode base64 string
-        var base64 = trimmed
-            .replacingOccurrences(of: "-", with: "+")
-            .replacingOccurrences(of: "_", with: "/")
-        while base64.count % 4 != 0 {
-            base64 += "="
-        }
-
-        guard let data = Data(base64Encoded: base64) else {
-            print("❌ Base64 decoding failed")
-            return nil
-        }
-
-        guard let jsonObject = try? JSONSerialization.jsonObject(with: data),
-              let dict = jsonObject as? [String: Any],
-              let invitation = dict["invitation"] as? [String: Any] else {
-            print("❌ JSON decoding or invitation field failed")
-            return nil
-        }
-
-        guard let id = invitation["@id"] as? String,
-              let typeRaw = invitation["@type"] as? String,
-              let type = InvitationPreviewInfo.InvitationType(rawValue: typeRaw),
-              let urlString = invitation["url"] as? String,
-              let url = URL(string: urlString) else {
-            print("❌ Missing required fields inside 'invitation'")
-            return nil
-        }
-
-        let label = invitation["label"] as? String
-        let comment = invitation["comment"] as? String
-        let formats = dict["formats"] as? [String]
-
-        return InvitationPreviewInfo(
-            id: id,
-            url: url,
-            label: label,
-            comment: comment,
-            type: type,
-            formats: formats,
-            jsonRepresentation: data
-        )
-    }
-    
     /// Process an invitation received by the wallet.
     /// - Parameters:
     ///   - offerUrl: The originating URL typically encoded in a QR code.

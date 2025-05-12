@@ -208,7 +208,7 @@ public class WalletService: WalletServiceDescriptor {
             decoder.keyDecodingStrategy = .convertFromSnakeCase
             
             
-            let examplePreviewDescriptor = PreviewDescriptor(
+            let examplePreviewDescriptor = InvitationPreviewInfo(
                 id: "preview-123",
                 url: URL(string: "https://example.com/invitation")!,
                 label: "Example Credential",

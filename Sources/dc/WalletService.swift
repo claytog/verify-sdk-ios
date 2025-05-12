@@ -197,7 +197,7 @@ public class WalletService: WalletServiceDescriptor {
     public func previewInvitation(using offerUrl: URL) async throws -> any PreviewDescriptor {
         let data = try await processInvitation(using: offerUrl)
 
-        if let invitationPreviewInfo = decodeInvitationPreviewInfo(rawData: data) {
+        if let invitationPreviewInfo = decodeInvitationPreviewInfo(from: data) {
             print("invitationPreviewInfo: \(invitationPreviewInfo)")
             return invitationPreviewInfo
         } else {

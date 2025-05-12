@@ -197,19 +197,11 @@ public class WalletService: WalletServiceDescriptor {
     public func previewInvitation(using offerUrl: URL) async throws -> any PreviewDescriptor {
         let data = try await processInvitation(using: offerUrl)
 
-        if let jsonData = try? JSONEncoder().encode(data),
-           let jwtString = String(data: jsonData, encoding: .utf8) {
-            
-            print("processInvitation JWT:\n\(jwtString)")
-            
-            if let invitationPreviewInfo = decodeJWTToInvitationPreviewInfo(jwtPayloadBase64: jwtString) {
-                print("invitationPreviewInfo: \(invitationPreviewInfo)")
-                return invitationPreviewInfo
-            } else {
-                throw NSError(domain: "PreviewError", code: 2, userInfo: [NSLocalizedDescriptionKey: "Failed to decode JWT to InvitationPreviewInfo"])
-            }
+        if let invitationPreviewInfo = decodeInvitationPreviewInfo(rawData: data) {
+            print("invitationPreviewInfo: \(invitationPreviewInfo)")
+            return invitationPreviewInfo
         } else {
-            throw NSError(domain: "PreviewError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to encode processInvitation result to JWT string"])
+            throw NSError(domain: "PreviewError", code: 2, userInfo: [NSLocalizedDescriptionKey: "Failed to decode JWT to InvitationPreviewInfo"])
         }
 //            /// Determine what type of invitation to return.
 //            switch info.type {
